@@ -6,6 +6,7 @@ import hashlib
 from jinja2 import Environment, FileSystemLoader
 env = Environment(loader=FileSystemLoader('.'))
 
+
 CP_CONF = {
     '/css': {
         'tools.staticdir.on': True,
@@ -84,18 +85,17 @@ class BlogApp:
     # 대시보드 페이지
     @cherrypy.expose 
     def dashboard(self):
-        conn = db_connect()
-        cursor = conn.cursor()
-        
-        cursor.execute("SELECT id, title, username,content FROM boards")
-        
-        posts = cursor.fetchall()
-        
-        print(posts)
-        conn.close()
-        tmpl = env.get_template('/templates/list.html')
-        
-        return tmpl.render(posts=posts)
+        if 'username' in cherrypy.session:
+            conn = db_connect()
+            cursor = conn.cursor()
+            cursor.execute("SELECT id, title, username,content FROM boards")
+            posts = cursor.fetchall()
+            # print(posts)
+            conn.close()
+            tmpl = env.get_template('/templates/list.html')
+            return tmpl.render(posts=posts)
+        else:
+            raise cherrypy.HTTPRedirect('/login')
                 
     # 등록 페이지
     @cherrypy.expose
@@ -119,21 +119,26 @@ class BlogApp:
             conn.commit()
             conn.close()
             raise cherrypy.HTTPRedirect('/dashboard')
+        else:
+            raise cherrypy.HTTPRedirect('/login')
     
     @cherrypy.expose
     def delete_post(self, id=None):
         
         conn = db_connect()
         cursor = conn.cursor()
-
-        cursor.execute("DELETE FROM boards WHERE id = %s", (id,))
-
-        conn.commit()
-        conn.close()
-        raise cherrypy.HTTPRedirect('/dashboard')
-
-        
-    
+        cursor.execute("SELECT username FROM boards WHERE id = %s", (id,))
+        user = cursor.fetchone()
+        # print(cherrypy.session['username'])
+        if cherrypy.session['username'] ==user[0]:
+            cursor.execute("DELETE FROM boards WHERE id = %s", (id, ))
+            conn.commit()
+            conn.close()
+            raise cherrypy.HTTPRedirect('/dashboard')
+        else: 
+            cherrypy.response.status = 403
+            raise cherrypy.HTTPRedirect('/dashboard')
+            
     # 로그아웃
     @cherrypy.expose
     def logout(self):

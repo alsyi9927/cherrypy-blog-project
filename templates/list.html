@@ -23,7 +23,7 @@
     <table class="table">
         <thead class="thead-light">
         <tr class="text-center">
-            <th scope="col">num</th>
+            <th scope="col">번호</th>
             <th scope="col">제목</th>
             <th scope="col">작성자</th>
             <th scope="col">내용</th>
@@ -66,11 +66,13 @@
                             .then(response => {
                                 if (response.ok) {
                                     location.reload();
-                                } else {
-                                    alert('삭제 실패');
-                                    location.reload();
+                                }
                                 }
                             });
+                            error: function (xhr) {
+
+                                if(xhr.status == 403) {
+                                    alert("가입되지 않은 이메일입니다.")}
                         }
                     }
                     </script>
