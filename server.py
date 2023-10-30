@@ -122,22 +122,41 @@ class BlogApp:
         else:
             raise cherrypy.HTTPRedirect('/login')
     
+    # 삭제 처리
     @cherrypy.expose
-    def delete_post(self, id=None):
-        
+    def delete_post(self, id):
         conn = db_connect()
         cursor = conn.cursor()
-        cursor.execute("SELECT username FROM boards WHERE id = %s", (id,))
+        cursor.execute("SELECT username FROM boards WHERE id = %s", (id, ))
         user = cursor.fetchone()
-        # print(cherrypy.session['username'])
         if cherrypy.session['username'] ==user[0]:
             cursor.execute("DELETE FROM boards WHERE id = %s", (id, ))
             conn.commit()
             conn.close()
-            raise cherrypy.HTTPRedirect('/dashboard')
         else: 
             cherrypy.response.status = 403
-            raise cherrypy.HTTPRedirect('/dashboard')
+            
+    # 세부사항 페이지
+    @cherrypy.expose
+    def detail(self, id):
+        tmpl = env.get_template('/templates/detail.html')
+        conn = db_connect()
+        cursor = conn.cursor()
+        cursor.execute("SELECT title, content, username FROM boards WHERE id = %s", (id,))
+        content = cursor.fetchone()
+        return tmpl.render(username=content[2], title = content[0], content = content[1])
+        
+    # 수정 페이지
+    @cherrypy.expose
+    def edit(self, id):
+        conn = db_connect()
+        cursor = conn.cursor()
+        cursor.execute("SELECT username FROM boards WHERE id = %s", (id, ))
+        user = cursor.fetchone()
+        if cherrypy.session['username'] ==user[0]:
+            conn.close()
+        else: 
+            cherrypy.response.status = 403
             
     # 로그아웃
     @cherrypy.expose
