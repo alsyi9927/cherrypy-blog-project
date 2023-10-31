@@ -139,25 +139,31 @@ class BlogApp:
     # 세부사항 페이지
     @cherrypy.expose
     def detail(self, id):
-        tmpl = env.get_template('/templates/detail.html')
-        conn = db_connect()
-        cursor = conn.cursor()
-        cursor.execute("SELECT title, content, username FROM boards WHERE id = %s", (id,))
-        content = cursor.fetchone()
-        return tmpl.render(username=content[2], title = content[0], content = content[1])
+        if 'username' in cherrypy.session:
+            user = cherrypy.session['username']
+            tmpl = env.get_template('/templates/detail.html')
+            conn = db_connect()
+            cursor = conn.cursor()
+            cursor.execute("SELECT title, content, username FROM boards WHERE id = %s", (id,))
+            content = cursor.fetchone()
+            return tmpl.render(username=content[2], title = content[0], content = content[1], user=user, id=id)
+        else:
+            raise cherrypy.HTTPRedirect('/login')
+            
         
     # 수정 페이지
     @cherrypy.expose
-    def edit(self, id):
-        conn = db_connect()
-        cursor = conn.cursor()
-        cursor.execute("SELECT username FROM boards WHERE id = %s", (id, ))
-        user = cursor.fetchone()
-        if cherrypy.session['username'] ==user[0]:
+    def edit(self, title, content, id):
+        if 'username' in cherrypy.session:
+            conn = db_connect()
+            cursor = conn.cursor()
+            cursor.execute("UPDATE boards SET title=%s, content=%s where id =%s",(title,content,id))
+            conn.commit()
             conn.close()
-        else: 
-            cherrypy.response.status = 403
-            
+            raise cherrypy.HTTPRedirect('/dashboard')
+        else:
+            raise cherrypy.HTTPRedirect('/login')
+    
     # 로그아웃
     @cherrypy.expose
     def logout(self):
@@ -170,4 +176,3 @@ if __name__ == '__main__':
     cherrypy.config.update({'server.socket_host': '0.0.0.0', 'server.socket_port': 8080})
     
     cherrypy.quickstart(BlogApp(), config=CP_CONF)
-

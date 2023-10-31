@@ -34,7 +34,7 @@
             <th scope="col">제목</th>
             <th scope="col">작성자</th>
             <th scope="col">내용</th>
-            <th scope="col">수정  -  삭제</th>
+            <th scope="col">삭제</th>
         </tr>
         </thead>
         <tbody>
@@ -55,7 +55,6 @@
                     <span>{{ post[3] }}</span>
                 </td>
                 <td>
-                    <span><button onclick="EditPost('{{ post[0] }}')" class="btn btn-secondary">수정</button></span>
                     <span><button onclick="deletePost('{{ post[0] }}')" class="board_button btn btn-secondary btn-sm rounded-pill" type="submit">삭제</button></span>
                 </td>
             </tr>
